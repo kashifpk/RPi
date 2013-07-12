@@ -1,5 +1,6 @@
 import sys
 import time
+from datetime import datetime
 import RPi.GPIO as GPIO
 
 """
@@ -32,6 +33,22 @@ def sequential_test():
             GPIO.output(pin, 0)
 
 
+def display_time(hour, minute, second):
+    binary_strs = dict(
+        hour = bin(hour)[2:].rjust(5, '0'),
+        minute = bin(minute)[2:].rjust(6, '0'),
+        second = bin(second)[2:].rjust(6, '0')
+    )
+
+    #print("Time: %i:%i:%i  Binary: %s %s %s" % (hour, minute, second, binary_strs['hour'], binary_strs['minute'], binary_strs['second']))
+    turn_off_all_pins()
+    for mapping_name, mapping_list in pin_mapping.iteritems():
+        for pin in mapping_list:
+            idx = mapping_list.index(pin)
+            sig = int(binary_strs[mapping_name][idx])
+            GPIO.output(pin, sig)
+
+
 if '__main__' == __name__:
     
     GPIO.setmode(GPIO.BOARD)
@@ -40,3 +57,12 @@ if '__main__' == __name__:
     
     if len(sys.argv) > 1 and 'test' == sys.argv[1]:
         sequential_test()
+    else:
+        try:
+            while True:
+                d = datetime.now()
+                display_time(d.hour, d.minute, d.second)
+                time.sleep(1)
+        except (KeyboardInterrupt, SystemExit):
+            turn_off_all_pins()
+            print("Good bye!")
